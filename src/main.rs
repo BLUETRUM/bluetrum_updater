@@ -188,6 +188,7 @@ fn main() -> io::Result<()> {
 
         let get_str = match n {
             Ok(n) => {
+                println!("{:?}", &serial_buf[..n]);
                 std::str::from_utf8(&serial_buf[..n]).unwrap()
             },
             Err(_) => {
@@ -196,12 +197,12 @@ fn main() -> io::Result<()> {
             }
         };
 
-        println!("{}", get_str);
         if get_str == STR_RECIVE_SUCCESS {
             updater.step = UpdateStep::UpdateRecvSuccess;
+            println!("{}", get_str);
             break;
         }
-        thread::sleep(time::Duration::from_millis(100));
+        thread::sleep(time::Duration::from_millis(10));
     }
 
     // update loop
@@ -241,6 +242,8 @@ fn main() -> io::Result<()> {
 
                 let txcmd_s = bincode::serialize(&txcmd).unwrap();
                 txcmd.crc = updater_calc_crc(&txcmd_s[..12]) as u16;
+                let txcmd_s = bincode::serialize(&txcmd).unwrap();
+                println!("{} {:?}", txcmd_s.len(), txcmd_s);
                 println!("{:?}", txcmd);
 
                 // for (i, x) in updater.rx_buf.iter().enumerate() {
@@ -254,6 +257,17 @@ fn main() -> io::Result<()> {
                 let txcmd_s = bincode::serialize(&txcmd).unwrap();
                 port.write(&txcmd_s).unwrap();
                 port.write(&updater.rx_buf[..]).unwrap();
+
+                // let mut test: [u8; 512] = [0; 512];
+                // for i in 0..test.len() {
+                //     test[i] = (i % (0xff as usize)) as u8;
+                //     if (i+1) % 16 != 0 {
+                //         print!("{:02x} ", test[i]);
+                //     } else {
+                //         println!("{:02x} ", test[i]);
+                //     }
+                // }
+                // port.write(&test).unwrap();
             },
 
             // read update status
